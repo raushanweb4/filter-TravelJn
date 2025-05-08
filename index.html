@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Flight Filter Sidebar</title>
+  <title>Merged Flight Filter UI</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     :root {
       --bs-primary: #162849;
       --bs-danger: #d40046;
-      --bs-font-sans-serif: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      --bs-font-sans-serif: "Poppins", sans-serif;
     }
 
     body {
@@ -22,6 +22,7 @@
       padding: 20px;
       border: 1px solid #dee2e6;
       border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
     }
 
     .filter-title {
@@ -32,6 +33,7 @@
 
     .form-check-label {
       color: #333;
+      margin-left: 5px;
     }
 
     .btn-show-more {
@@ -45,10 +47,26 @@
       background-color: var(--bs-danger);
     }
 
-    .range-label {
+    .slider-value {
+      display: flex;
+      justify-content: space-between;
       font-size: 14px;
       color: #555;
-      margin-top: 5px;
+    }
+
+    .btn-time.active {
+      background-color: var(--bs-primary);
+      color: #fff;
+    }
+
+    .time-btns .btn {
+      width: 22%;
+      margin: 2px;
+    }
+
+    .form-check-input:checked {
+      background-color: var(--bs-primary);
+      border-color: var(--bs-primary);
     }
   </style>
 </head>
@@ -57,7 +75,7 @@
 <div class="container mt-4">
   <div class="row">
     <div class="col-lg-4 col-md-5">
-      <div class="filter-sidebar shadow-sm">
+      <div class="filter-sidebar">
 
         <!-- Sort By -->
         <div class="mb-4">
@@ -78,25 +96,55 @@
 
         <!-- Price -->
         <div class="mb-4">
-          <h5 class="filter-title">Price</h5>
-          <input type="range" class="form-range" min="400" max="1700" id="priceRange">
-          <div class="range-label">£411 – £1701</div>
+          <h5 class="filter-title">Price (USD)</h5>
+          <div class="slider-value"><span id="priceMin">916.55</span><span id="priceMax">999.55</span></div>
+          <input type="range" class="form-range" min="916.55" max="999.55" step="1" id="priceRange">
         </div>
 
-        <!-- Departure Time -->
+        <!-- LAS - LHR -->
         <div class="mb-4">
-          <h5 class="filter-title">Departure time</h5>
-          <label class="form-label">LEG 1</label>
-          <input type="range" class="form-range" min="0" max="24">
-          <label class="form-label">LEG 2</label>
-          <input type="range" class="form-range" min="0" max="24">
+          <h5 class="filter-title">LAS - LHR</h5>
+          <div class="form-check d-flex align-items-center">
+            <input class="form-check-input" type="checkbox" id="lasNonStop" checked>
+            <label class="form-check-label" for="lasNonStop">Non-Stop</label>
+          </div>
+          <div class="form-check d-flex align-items-center">
+            <input class="form-check-input" type="checkbox" id="las1Stop" checked>
+            <label class="form-check-label" for="las1Stop">1 Stop</label>
+          </div>
+
+          <h6 class="mt-3">Journey Duration (Hours)</h6>
+          <div class="slider-value"><span id="lasDurMin">8</span><span id="lasDurMax">21</span></div>
+          <input type="range" class="form-range" min="8" max="21" step="1" id="lasDuration">
+
+          <h6 class="mt-3">Departure Time</h6>
+          <div class="d-flex flex-wrap gap-2 time-btns">
+            <button class="btn btn-outline-primary btn-time">05–12</button>
+            <button class="btn btn-outline-primary btn-time">12–18</button>
+            <button class="btn btn-outline-primary btn-time">18–23</button>
+            <button class="btn btn-outline-primary btn-time">23–05</button>
+          </div>
         </div>
 
-        <!-- Duration -->
+        <!-- LHR - LAS -->
         <div class="mb-4">
-          <h5 class="filter-title">Duration</h5>
-          <input type="range" class="form-range" min="0" max="25">
-          <div class="range-label">23:30 hours – 09:25 hours</div>
+          <h5 class="filter-title">LHR - LAS</h5>
+          <div class="form-check d-flex align-items-center">
+            <input class="form-check-input" type="checkbox" id="lhrNonStop" checked>
+            <label class="form-check-label" for="lhrNonStop">Non-Stop</label>
+          </div>
+          <div class="form-check d-flex align-items-center">
+            <input class="form-check-input" type="checkbox" id="lhr1Stop" checked>
+            <label class="form-check-label" for="lhr1Stop">1 Stop</label>
+          </div>
+          <div class="form-check d-flex align-items-center">
+            <input class="form-check-input" type="checkbox" id="lhr2Stops" checked>
+            <label class="form-check-label" for="lhr2Stops">2 Stops</label>
+          </div>
+
+          <h6 class="mt-3">Journey Duration (Hours)</h6>
+          <div class="slider-value"><span id="lhrDurMin">19</span><span id="lhrDurMax">53</span></div>
+          <input type="range" class="form-range" min="19" max="53" step="1" id="lhrDuration">
         </div>
 
         <!-- Airlines -->
@@ -119,11 +167,38 @@
     </div>
 
     <div class="col-lg-8 col-md-7">
-      <!-- This column can contain flight results or other content -->
+      <!-- Right section for flight search results or content -->
     </div>
   </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+  // Update price
+  const priceRange = document.getElementById("priceRange");
+  priceRange.addEventListener("input", () => {
+    document.getElementById("priceMin").textContent = parseFloat(priceRange.value).toFixed(2);
+  });
+
+  // LAS Duration
+  const lasDuration = document.getElementById("lasDuration");
+  lasDuration.addEventListener("input", () => {
+    document.getElementById("lasDurMin").textContent = lasDuration.value;
+  });
+
+  // LHR Duration
+  const lhrDuration = document.getElementById("lhrDuration");
+  lhrDuration.addEventListener("input", () => {
+    document.getElementById("lhrDurMin").textContent = lhrDuration.value;
+  });
+
+  // Toggle active time buttons
+  document.querySelectorAll(".btn-time").forEach(btn => {
+    btn.addEventListener("click", () => {
+      btn.classList.toggle("active");
+    });
+  });
+</script>
+
 </body>
 </html>
